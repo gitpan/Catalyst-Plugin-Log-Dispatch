@@ -1,0 +1,10 @@
+.cvsignore
+Build.PL
+Changes
+lib/Catalyst/Plugin/Log/Dispatch.pm
+Makefile.PL
+MANIFEST
+META.yml			# Will be created by "make dist"
+README
+t/00.load.t
+t/pod.t

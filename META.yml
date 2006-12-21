@@ -1,0 +1,23 @@
+---
+name: Catalyst-Plugin-Log-Dispatch
+version: 0.03
+author:
+  - 'Shota Takayama <shot[at]bindstorm.jp>'
+abstract: Log module of Catalyst that uses Log::Dispatch
+license: perl
+resources:
+  license: http://dev.perl.org/licenses/
+requires:
+  Catalyst: 5.65
+  Log::Dispatch: 2.13
+  Test::More: 0
+provides:
+  Catalyst::Plugin::Log::Dispatch:
+    file: lib/Catalyst/Plugin/Log/Dispatch.pm
+    version: 0.03
+  Catalyst::Plugin::Log::Dispatch::Backend:
+    file: lib/Catalyst/Plugin/Log/Dispatch.pm
+generated_by: Module::Build version 0.2806
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2
