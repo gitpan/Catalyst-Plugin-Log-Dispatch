@@ -3,12 +3,16 @@ package Catalyst::Plugin::Log::Dispatch;
 use warnings;
 use strict;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 use base 'Catalyst::Base';
 
+use UNIVERSAL::require;
+
 use NEXT;
 use IO::Handle;
+
+BEGIN { $Log::Dispatch::Config::CallerDepth = 1 if(Log::Dispatch::Config->use); }
 
 # Module implementation here
 use Data::Dumper;
@@ -27,7 +31,8 @@ sub setup {
             @{ $c->config->{'Log::Dispatch'} },
             {   class     => 'STDOUT',
                 name      => 'default',
-                min_level => 'debug'
+                min_level => 'debug',
+                format    => '[%p] %m%n'
             }
         );
 
@@ -42,16 +47,20 @@ sub setup {
         }
         my $class = sprintf( "Log::Dispatch::%s", $logc{'class'} );
         delete $logc{'class'};
-        if ( ref( $logc{'callbacks'} ) ne 'CODE' ) {
-            my $method = sprintf( '%s_callback', $logc{'callbacks'} || '' );
-            unless ( $c->log->can($method) ) {
-                $method = 'linebreak_callback';
+        $logc{'callbacks'} = [$logc{'callbacks'}] if(ref($logc{'callbacks'}) eq 'CODE');
+        
+        if(exists $logc{'format'} and $Log::Dispatch::Config::CallerDepth ) {
+            my $callbacks = Log::Dispatch::Config->format_to_cb($logc{'format'},0);
+            if(defined $callbacks) {
+                $logc{'callbacks'} = [] unless($logc{'callbacks'});
+                push(@{$logc{'callbacks'}}, $callbacks);
             }
-            $method = "Catalyst::Plugin::Log::Dispatch\:\:Backend::${method}";
-            $logc{'callbacks'} = \&{"$method"};
         }
-        eval("use $class;");
-        die "$@" if ($@);
+        elsif(!$logc{'callbacks'}) {
+            $logc{'callbacks'} = sub { my %p = @_; return "$p{message}\n"; };
+        }
+        
+        $class->use or die "$@";
         $c->log->add( $class->new(%logc) );
     }
     if ($old_log) {
@@ -95,25 +104,31 @@ use Data::Dumper;
             my $self = shift;
             return $self->level_is_valid($name);
         };
+
+        *{"$l"} = sub {
+            my $self = shift;
+            my %p = (level => $name,
+                     message => "@_");
+            
+            foreach (keys %{ $self->{outputs} }) {
+                my %h = %p;
+                $h{name} = $_;
+                $h{message} = $self->{outputs}{$_}->_apply_callbacks(%h)
+                    if($self->{outputs}{$_}->{callbacks});
+                push(@{$self->_body}, \%h);
+            }
+        };
     }
 }
 
 sub new {
     my $pkg  = shift;
     my $this = $pkg->SUPER::new(@_);
-    $this->mk_accessors(qw/abort/);
+    $this->mk_accessors(qw/abort _body/);
+    $this->_body([]);
     return $this;
 }
 
-sub warn {
-    my $self = shift;
-    return $self->warning(@_);
-}
-
-sub fatal {
-    my $self = shift;
-    return $self->critical(@_);
-}
 
 sub dumper {
     my $self = shift;
@@ -133,30 +148,17 @@ sub level_is_valid {
 
 sub _flush {
     my $self = shift;
-    if ( $self->abort ) {
+    if ( $self->abort || !(scalar @{$self->_body})) {
         $self->abort(undef);
     }
+    else {
+        foreach my $p (@{$self->_body}) {
+            $self->{outputs}{$p->{name}}->log_message(%{$p});
+        }
+    }
+    $self->_body([]);
 }
 
-sub timestamp_callback {
-    my %p = @_;
-
-    $p{'message'} .= "\n" unless ( $p{'message'} =~ /\n$/ );
-    my @localtime = localtime();
-    return sprintf(
-        "[%04d-%02d-%02d %02d:%02d:%3.3f][%d][%s] %s",
-        $localtime[5] + 1900,
-        $localtime[4] + 1,
-        $localtime[3], $localtime[2], $localtime[1], $localtime[0] + (gettimeofday)[1] / 1000000,
-        $$, $p{'level'}, $p{'message'}
-    );
-}
-
-sub linebreak_callback {
-    my %p = @_;
-    $p{'message'} .= "\n" unless ( $p{'message'} =~ /\n$/ );
-    return "[$p{'level'}] $p{'message'}";
-}
 
 1;    # Magic true value required at end of module
 __END__
@@ -186,7 +188,7 @@ configuration in source code
          name      => 'file',
          min_level => 'debug',
          filename  => MyApp->path_to('debug.log'),
-         callbacks => 'timestamp',
+         format    => '[%p] %m %n',
         }];
 
 in myapp.yml
@@ -197,7 +199,7 @@ in myapp.yml
        min_level: debug
        filename: __path_to(debug.log)__
        mode: append
-       callbacks: timestamp
+       format: '[%p] %m %n'
 
 If you use L<Catalyst::Plugin::ConfigLoader>,
 please load this module after L<Catalyst::Plugin::ConfigLoader>.
@@ -208,7 +210,7 @@ Catalyst::Plugin::Log::Dispatch is a plugin to use Log::Dispatch from Catalyst.
 
 =head1 CONFIGURATION
 
-It is same as the configuration of Log::Dispatch excluding "class" and "callbacks".
+It is same as the configuration of Log::Dispatch excluding "class" and "format".
 
 =over
 
@@ -217,16 +219,15 @@ It is same as the configuration of Log::Dispatch excluding "class" and "callback
 The class name to Log::Dispatch::* object.
 Please specify the name just after "Log::Dispatch::" of the class name.
 
-=item callbacks
+=item format
 
-When the code reference is specified, it is same as the configuration of Log::Dispatch.
-"timestamp" and "linebreak" can be used in addition to the code reference.
+It is the same as the format option of Log::Dispatch::Config.
 
 =back
 
 =head1 DEPENDENCIES
 
-L<Catalyst>, L<Log::Dispatch>
+L<Catalyst>, L<Log::Dispatch>, L<Log::Dispatch::Config>
 
 =head1 AUTHOR
 
