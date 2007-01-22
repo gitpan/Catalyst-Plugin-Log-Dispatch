@@ -9,7 +9,7 @@ WriteMakefile(
     ABSTRACT_FROM => 'lib/Catalyst/Plugin/Log/Dispatch.pm',
     PREREQ_PM     => {
         'Test::More'            => 0,
-        'Log::Dispatch'         => '2.15',
+        'Log::Dispatch'         => '2.13',
         'Catalyst'              => '5.65'
     },
 

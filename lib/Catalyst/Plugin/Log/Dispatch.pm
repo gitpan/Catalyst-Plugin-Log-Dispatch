@@ -3,7 +3,7 @@ package Catalyst::Plugin::Log::Dispatch;
 use warnings;
 use strict;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 use base 'Catalyst::Base';
 
@@ -68,6 +68,9 @@ sub setup {
         foreach my $line ( split /\n/, $old_log->body ) {
             if ( $line =~ /^\[(\w+)] (.+)$/ ) {
                 push( @old_logs, { level => $1, msg => [$2] } );
+            }
+            elsif( $line =~ /^\[(\w{3} \w{3} \d{2} \d{2}:\d{2}:\d{2} \d{4})\] \[catalyst\] \[(\w+)\] (.+)$/ ) {
+                push( @old_logs, { level => $2, msg => [$3] } );
             }
             else {
                 push( @{ $old_logs[-1]->{'msg'} }, $line );

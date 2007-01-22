@@ -1,11 +1,14 @@
 Revision history for Catalyst-Plugin-Log-Dispatch
 
-0.04  Fri Dec 22 03:37:47 2006
+0.05  Mon Jun 22 20:16:10 2007 JST
+    - Real Support Catalyst 5.65
+    - Support Log::Dispatch 2.13
+0.04  Fri Dec 22 03:37:47 2006 JST
     - delete timestamp_callback and linebreak_callback.
     - support format option of Log::Dispatch::Config.
     - It corresponds to a correct method of "_flush".
-0.03  Thu Dec 21 22:53:05 2006
+0.03  Thu Dec 21 22:53:05 2006 JST
     Initial release
-0.01  Wed Dec 20 00:52:05 2006
+0.01  Wed Dec 20 00:52:05 2006 JST
     First cut.
 

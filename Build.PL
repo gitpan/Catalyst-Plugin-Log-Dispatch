@@ -9,7 +9,7 @@ my $builder = Module::Build->new(
     dist_version_from => 'lib/Catalyst/Plugin/Log/Dispatch.pm',
     requires          => {
         'Test::More'    => 0,
-        'Log::Dispatch' => '2.15',
+        'Log::Dispatch' => '2.13',
         'Catalyst'      => '5.65'
     },
     add_to_cleanup => ['Catalyst-Plugin-Log-Dispatch-*'],
