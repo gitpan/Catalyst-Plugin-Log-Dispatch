@@ -1,5 +1,7 @@
 Revision history for Catalyst-Plugin-Log-Dispatch
 
+0.06  Fri Feb  2 17:10:03 2007 JST
+    - Bug Fix for Catalyst 5.65 Support
 0.05  Mon Jun 22 20:16:10 2007 JST
     - Real Support Catalyst 5.65
     - Support Log::Dispatch 2.13
