@@ -10,7 +10,8 @@ WriteMakefile(
     PREREQ_PM     => {
         'Test::More'            => 0,
         'Log::Dispatch'         => '2.13',
-        'Catalyst'              => '5.65'
+        'Catalyst'              => '5.65',
+        'UNIVERSAL::require'    => 0,
     },
 
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },

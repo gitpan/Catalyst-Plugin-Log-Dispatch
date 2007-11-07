@@ -1,16 +1,24 @@
 Revision history for Catalyst-Plugin-Log-Dispatch
 
+0.07  Thu Nov  8 02:35:22 2007 JST
+    - Add to Makefile.PL pre-require UNIVERSAL::require
+    - Fix Settlement of Catalyst::Log ( Thank you Dave Rolsky )
+    
 0.06  Fri Feb  2 17:10:03 2007 JST
     - Bug Fix for Catalyst 5.65 Support
+    
 0.05  Mon Jun 22 20:16:10 2007 JST
     - Real Support Catalyst 5.65
     - Support Log::Dispatch 2.13
+    
 0.04  Fri Dec 22 03:37:47 2006 JST
     - delete timestamp_callback and linebreak_callback.
     - support format option of Log::Dispatch::Config.
     - It corresponds to a correct method of "_flush".
+    
 0.03  Thu Dec 21 22:53:05 2006 JST
-    Initial release
+    - Initial release
+    
 0.01  Wed Dec 20 00:52:05 2006 JST
-    First cut.
+    - First cut.
 

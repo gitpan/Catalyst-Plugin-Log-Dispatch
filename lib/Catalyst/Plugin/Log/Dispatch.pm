@@ -3,7 +3,7 @@ package Catalyst::Plugin::Log::Dispatch;
 use warnings;
 use strict;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 use base 'Catalyst::Base';
 
@@ -63,7 +63,7 @@ sub setup {
         $class->use or die "$@";
         $c->log->add( $class->new(%logc) );
     }
-    if ($old_log) {
+    if ($old_log && defined $old_log->body) {
         my @old_logs;
         foreach my $line ( split /\n/, $old_log->body ) {
             if ( $line =~ /^\[(\w+)] (.+)$/ ) {
