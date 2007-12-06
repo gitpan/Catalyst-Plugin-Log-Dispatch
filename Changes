@@ -1,5 +1,8 @@
 Revision history for Catalyst-Plugin-Log-Dispatch
 
+0.071 Thu Dec  6 18:38:00 2007 JST
+    - 0.07 was not able to be up-loaded to CPAN why.
+
 0.07  Thu Nov  8 02:35:22 2007 JST
     - Add to Makefile.PL pre-require UNIVERSAL::require
     - Fix Settlement of Catalyst::Log ( Thank you Dave Rolsky )

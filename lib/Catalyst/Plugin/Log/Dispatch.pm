@@ -3,7 +3,7 @@ package Catalyst::Plugin::Log::Dispatch;
 use warnings;
 use strict;
 
-our $VERSION = '0.07';
+our $VERSION = '0.071';
 
 use base 'Catalyst::Base';
 
