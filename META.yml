@@ -1,6 +1,6 @@
 ---
 name: Catalyst-Plugin-Log-Dispatch
-version: 0.071
+version: 0.08
 author:
   - 'Shota Takayama <shot[at]bindstorm.jp>'
 abstract: Log module of Catalyst that uses Log::Dispatch
@@ -15,7 +15,7 @@ requires:
 provides:
   Catalyst::Plugin::Log::Dispatch:
     file: lib/Catalyst/Plugin/Log/Dispatch.pm
-    version: 0.071
+    version: 0.08
   Catalyst::Plugin::Log::Dispatch::Backend:
     file: lib/Catalyst/Plugin/Log/Dispatch.pm
 generated_by: Module::Build version 0.2808

@@ -3,7 +3,7 @@ package Catalyst::Plugin::Log::Dispatch;
 use warnings;
 use strict;
 
-our $VERSION = '0.071';
+our $VERSION = '0.08';
 
 use base 'Catalyst::Base';
 
@@ -12,7 +12,7 @@ use UNIVERSAL::require;
 use NEXT;
 use IO::Handle;
 
-BEGIN { $Log::Dispatch::Config::CallerDepth = 1 if(Log::Dispatch::Config->use); }
+BEGIN { Log::Dispatch::Config->use or warn "$@\nIt moves without using Log::Dispatch::Config.\n"; }
 
 # Module implementation here
 use Data::Dumper;
@@ -49,7 +49,7 @@ sub setup {
         delete $logc{'class'};
         $logc{'callbacks'} = [$logc{'callbacks'}] if(ref($logc{'callbacks'}) eq 'CODE');
         
-        if(exists $logc{'format'} and $Log::Dispatch::Config::CallerDepth ) {
+        if(exists $logc{'format'} and defined $Log::Dispatch::Config::CallerDepth ) {
             my $callbacks = Log::Dispatch::Config->format_to_cb($logc{'format'},0);
             if(defined $callbacks) {
                 $logc{'callbacks'} = [] unless($logc{'callbacks'});
@@ -112,7 +112,7 @@ use Data::Dumper;
             my $self = shift;
             my %p = (level => $name,
                      message => "@_");
-            
+            local $Log::Dispatch::Config::CallerDepth = 1;
             foreach (keys %{ $self->{outputs} }) {
                 my %h = %p;
                 $h{name} = $_;

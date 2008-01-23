@@ -1,5 +1,9 @@
 Revision history for Catalyst-Plugin-Log-Dispatch
 
+0.08  Wed Jan 23 16:18:30 JST 2008
+    - The $Log::Dispatch::Config::CallerDepth was correctly changed with a local.
+      ( Thank you for typester )
+      
 0.071 Thu Dec  6 18:38:00 2007 JST
     - 0.07 was not able to be up-loaded to CPAN why.
 
