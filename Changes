@@ -1,5 +1,10 @@
 Revision history for Catalyst-Plugin-Log-Dispatch
 
+0.09  Fri Feb 15 14:49:01 JST 2008
+    - The function used by _fluash was changed from log_message into log.
+      As a result, the setting of the log level came to operate correctly. 
+      ( Thank you for Yu Isobe )
+      
 0.08  Wed Jan 23 16:18:30 JST 2008
     - The $Log::Dispatch::Config::CallerDepth was correctly changed with a local.
       ( Thank you for typester )

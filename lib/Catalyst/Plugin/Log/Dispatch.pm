@@ -3,7 +3,7 @@ package Catalyst::Plugin::Log::Dispatch;
 use warnings;
 use strict;
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 use base 'Catalyst::Base';
 
@@ -112,7 +112,7 @@ use Data::Dumper;
             my $self = shift;
             my %p = (level => $name,
                      message => "@_");
-            local $Log::Dispatch::Config::CallerDepth = 1;
+            local $Log::Dispatch::Config::CallerDepth += 1;
             foreach (keys %{ $self->{outputs} }) {
                 my %h = %p;
                 $h{name} = $_;
@@ -156,7 +156,8 @@ sub _flush {
     }
     else {
         foreach my $p (@{$self->_body}) {
-            $self->{outputs}{$p->{name}}->log_message(%{$p});
+            local $self->{outputs}->{$p->{name}}->{callbacks} = undef;
+            $self->{outputs}->{$p->{name}}->log(%{$p});
         }
     }
     $self->_body([]);
