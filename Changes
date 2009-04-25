@@ -1,5 +1,11 @@
 Revision history for Catalyst-Plugin-Log-Dispatch
 
+0.10  Sun Apr 26 02:04:12 JST 2009
+    - It corresponded to the change of Catalyst 5.8..
+      ( Thunk you for hensley and Moritz Onken )
+    - Support XML format config. ( hash is changed into array )
+      ( Thunk you and sorry, Sam Kaufman. I had forgetten it. )
+      
 0.09  Fri Feb 15 14:49:01 JST 2008
     - The function used by _fluash was changed from log_message into log.
       As a result, the setting of the log level came to operate correctly. 

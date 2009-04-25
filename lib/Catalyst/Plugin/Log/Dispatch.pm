@@ -3,9 +3,9 @@ package Catalyst::Plugin::Log::Dispatch;
 use warnings;
 use strict;
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
-use base 'Catalyst::Base';
+#use base 'Catalyst::Base';
 
 use UNIVERSAL::require;
 
@@ -25,7 +25,12 @@ sub setup {
         $old_log = $c->log;
     }
     $c->log( Catalyst::Plugin::Log::Dispatch::Backend->new );
-
+    
+    #Make it an array with one element if its a hashref
+    if (ref ( $c->config->{'Log::Dispatch'} ) eq 'HASH') {
+        $c->config->{'Log::Dispatch'} = [ $c->config->{'Log::Dispatch'} ];
+    }
+    
     unless ( ref( $c->config->{'Log::Dispatch'} ) eq 'ARRAY' ) {
         push(
             @{ $c->config->{'Log::Dispatch'} },
@@ -59,13 +64,16 @@ sub setup {
         elsif(!$logc{'callbacks'}) {
             $logc{'callbacks'} = sub { my %p = @_; return "$p{message}\n"; };
         }
-        
+        $logc{hogehogemogemoge} = 1;
         $class->use or die "$@";
-        $c->log->add( $class->new(%logc) );
+        my $logb = $class->new(%logc);
+        $logb->{rtf} = $logc{real_time_flush} || 0;
+        $c->log->add( $logb );
     }
-    if ($old_log && defined $old_log->body) {
+    
+    if ($old_log && defined __log_dispatch_get_body( $old_log ) ) {
         my @old_logs;
-        foreach my $line ( split /\n/, $old_log->body ) {
+        foreach my $line ( split /\n/, __log_dispatch_get_body( $old_log ) ) {
             if ( $line =~ /^\[(\w+)] (.+)$/ ) {
                 push( @old_logs, { level => $1, msg => [$2] } );
             }
@@ -84,6 +92,10 @@ sub setup {
     $c->NEXT::setup(@_);
 }
 
+sub __log_dispatch_get_body {
+    my $log = shift;
+    return $Catalyst::VERSION > 5.8 ? $log->_body : $log->body;
+}
 1;
 
 package Catalyst::Plugin::Log::Dispatch::Backend;
@@ -116,9 +128,14 @@ use Data::Dumper;
             foreach (keys %{ $self->{outputs} }) {
                 my %h = %p;
                 $h{name} = $_;
-                $h{message} = $self->{outputs}{$_}->_apply_callbacks(%h)
-                    if($self->{outputs}{$_}->{callbacks});
-                push(@{$self->_body}, \%h);
+                if( $self->{outputs}->{$_}->{rtf} ) {
+                    $self->{outputs}->{$_}->log(%h);
+                }
+                else {
+                    $h{message} = $self->{outputs}->{$_}->_apply_callbacks(%h)
+                        if($self->{outputs}->{$_}->{callbacks});
+                    push(@{$self->_body}, \%h);
+                }
             }
         };
     }
