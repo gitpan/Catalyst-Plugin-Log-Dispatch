@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Catalyst-Plugin-Log-Dispatch
-version:            0.10
+version:            0.11
 abstract:           Log module of Catalyst that uses Log::Dispatch
 author:
     - Shota Takayama <shot[at]bindstorm.jp>

@@ -3,13 +3,21 @@ package Catalyst::Plugin::Log::Dispatch;
 use warnings;
 use strict;
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 #use base 'Catalyst::Base';
 
 use UNIVERSAL::require;
 
-use NEXT;
+BEGIN {
+    if( $Catalyst::VERSION >= 5.8 ) {
+        MRO::Compat->use or die "can not use MRO::Compat : $!\n";
+    }
+    else {
+        NEXT->use or die "can not use NEXT : $!\n";
+    }
+};
+
 use IO::Handle;
 
 BEGIN { Log::Dispatch::Config->use or warn "$@\nIt moves without using Log::Dispatch::Config.\n"; }
@@ -19,7 +27,6 @@ use Data::Dumper;
 
 sub setup {
     my $c = shift;
-
     my $old_log = undef;
     if ( $c->log and ref( $c->log ) eq 'Catalyst::Log' ) {
         $old_log = $c->log;
@@ -89,12 +96,17 @@ sub setup {
             $c->log->$level( join( "\n", @{ $line->{'msg'} } ) );
         }
     }
-    $c->NEXT::setup(@_);
+    if( $Catalyst::VERSION >= 5.8 ) {
+        return $c->maybe::next::method( @_ );
+    }
+    else {
+        $c->NEXT::setup(@_);
+    }
 }
 
 sub __log_dispatch_get_body {
     my $log = shift;
-    return $Catalyst::VERSION > 5.8 ? $log->_body : $log->body;
+    return $Catalyst::VERSION >= 5.8 ? $log->_body : $log->body;
 }
 1;
 

@@ -1,5 +1,9 @@
 Revision history for Catalyst-Plugin-Log-Dispatch
 
+0.11  Wed May 20 17:24:30 JST 2009
+    - It corresponded to the change in "NEXT" of "Catalyst 5.8".
+      ( Thunk you for Moritz Onken )
+      
 0.10  Sun Apr 26 02:04:12 JST 2009
     - It corresponded to the change of Catalyst 5.8..
       ( Thunk you for hensley and Moritz Onken )
