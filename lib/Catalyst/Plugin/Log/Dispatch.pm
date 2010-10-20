@@ -3,29 +3,31 @@ package Catalyst::Plugin::Log::Dispatch;
 use warnings;
 use strict;
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 #use base 'Catalyst::Base';
-
+use vars qw/$HasTimePiece $HasTimeHiRes/;
 use UNIVERSAL::require;
 
 BEGIN {
+    Log::Dispatch::Config->use or warn "$@\nIt moves without using Log::Dispatch::Config.\n";
+    $HasTimeHiRes = 1 if( Time::HiRes->use(qw/tv_interval/) );
+    $HasTimePiece = 1 if( Time::Piece->use );
+};
+$Catalyst::Plugin::Log::Dispatch::CallerDepth = 0;
+
+use IO::Handle;
+
+
+# Module implementation here
+
+sub setup {
     if( $Catalyst::VERSION >= 5.8 ) {
         MRO::Compat->use or die "can not use MRO::Compat : $!\n";
     }
     else {
         NEXT->use or die "can not use NEXT : $!\n";
     }
-};
-
-use IO::Handle;
-
-BEGIN { Log::Dispatch::Config->use or warn "$@\nIt moves without using Log::Dispatch::Config.\n"; }
-
-# Module implementation here
-use Data::Dumper;
-
-sub setup {
     my $c = shift;
     my $old_log = undef;
     if ( $c->log and ref( $c->log ) eq 'Catalyst::Log' ) {
@@ -68,10 +70,16 @@ sub setup {
                 push(@{$logc{'callbacks'}}, $callbacks);
             }
         }
+        if( exists $logc{'format_o'} and length( $logc{'format_o'} ) ) {
+            my $callbacks = Catalyst::Plugin::Log::Dispatch->_format_to_cb_o($logc{'format_o'},0);
+            if(defined $callbacks) {
+                $logc{'callbacks'} = [] unless($logc{'callbacks'});
+                push(@{$logc{'callbacks'}}, $callbacks);
+            }
+        }
         elsif(!$logc{'callbacks'}) {
             $logc{'callbacks'} = sub { my %p = @_; return "$p{message}\n"; };
         }
-        $logc{hogehogemogemoge} = 1;
         $class->use or die "$@";
         my $logb = $class->new(%logc);
         $logb->{rtf} = $logc{real_time_flush} || 0;
@@ -104,10 +112,105 @@ sub setup {
     }
 }
 
+
 sub __log_dispatch_get_body {
     my $log = shift;
     return $Catalyst::VERSION >= 5.8 ? $log->_body : $log->body;
 }
+
+# copy and paste from Log::Dispatch::Config
+# please teach a cool method.
+sub _format_to_cb_o {
+    my($class, $format, $stack) = @_;
+    return undef unless defined $format;
+    
+    # caller() called only when necessary
+    my $needs_caller = $format =~ /%[FLP]/;
+    if( $HasTimeHiRes ) {
+        return sub {
+            my %p = @_;
+            $p{p} = delete $p{level};
+            $p{m} = delete $p{message};
+            $p{n} = "\n";
+            $p{'%'} = '%';
+            
+            if ($needs_caller) {
+                my $depth = 0; 
+                $depth++ while caller($depth) =~ /^Catalyst::Plugin::Log::Dispatch/;
+                $depth += $Catalyst::Plugin::Log::Dispatch::CallerDepth;
+                @p{qw(P F L)} = caller($depth);
+            }
+            
+            my ($t,$ms) = Time::HiRes::gettimeofday =~ /^(\d+)\.(\d+)$/;
+            my $log = $format;
+            $log =~ s{
+                         (%d(?:{(.*?)})?)|   # $1: datetime $2: datetime fmt
+                         (%MS)|              # $3: milli second
+                         (?:%([%pmFLPn]))    # $4: others
+                 }{
+                     if ($1 && $2) {
+                         _strftime_o($2,$t);
+                     }
+                     elsif ($1) {
+                         scalar localtime;
+                     }
+                     elsif ($3) {
+                         $ms;
+                     }
+                     elsif ($4) {
+                         $p{$4};
+                     }
+                 }egx;
+            return $log;
+        };
+    }
+    else {
+        return sub {
+            my %p = @_;
+            $p{p} = delete $p{level};
+            $p{m} = delete $p{message};
+            $p{n} = "\n";
+            $p{'%'} = '%';
+            
+            if ($needs_caller) {
+                my $depth = 0; 
+                $depth++ while caller($depth) =~ /^Catalyst::Plugin::Log::Dispatch/;
+                $depth += $Catalyst::Plugin::Log::Dispatch::CallerDepth;
+                @p{qw(P F L)} = caller($depth);
+            }
+            
+            my $log = $format;
+            $log =~ s{
+                         (%d(?:{(.*?)})?)|   # $1: datetime $2: datetime fmt
+                         (?:%([%pmFLPn]))    # $3: others
+                 }{
+                     if ($1 && $2) {
+                         _strftime_o($2);
+                     }
+                     elsif ($1) {
+                         scalar localtime;
+                     }
+                     elsif ($3) {
+                         $p{$3};
+                     }
+                 }egx;
+            return $log;
+        };
+    }
+}
+
+sub _strftime_o {
+    my $fmt = shift;
+    my $time = shift || time;
+    if ($HasTimePiece) {
+        return Time::Piece->new($time)->strftime($fmt);
+    } else {
+        require POSIX;
+        return POSIX::strftime($fmt, localtime($time));
+    }
+}
+
+
 1;
 
 package Catalyst::Plugin::Log::Dispatch::Backend;
@@ -137,6 +240,7 @@ use Data::Dumper;
             my %p = (level => $name,
                      message => "@_");
             local $Log::Dispatch::Config::CallerDepth += 1;
+            local $Catalyst::Plugin::Log::Dispatch::CallerDepth += 3;
             foreach (keys %{ $self->{outputs} }) {
                 my %h = %p;
                 $h{name} = $_;

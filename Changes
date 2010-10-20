@@ -1,14 +1,21 @@
 Revision history for Catalyst-Plugin-Log-Dispatch
 
+0.12  Wed Oct  6 19:33:48 JST 2010
+    - move Catalyst version check to setup method.
+     ( Thank you for Matt S Trout )
+    - It corresponded to the output of the millisecond the format. 
+      It is a copy from Log::Dispatch::Config. It is clumsy.
+    - "Thunk" was changed into "Thank". I am foolish.
+    
 0.11  Wed May 20 17:24:30 JST 2009
     - It corresponded to the change in "NEXT" of "Catalyst 5.8".
-      ( Thunk you for Moritz Onken )
+      ( Thank you for Moritz Onken )
       
 0.10  Sun Apr 26 02:04:12 JST 2009
     - It corresponded to the change of Catalyst 5.8..
-      ( Thunk you for hensley and Moritz Onken )
+      ( Thank you for hensley and Moritz Onken )
     - Support XML format config. ( hash is changed into array )
-      ( Thunk you and sorry, Sam Kaufman. I had forgetten it. )
+      ( Thank you and sorry, Sam Kaufman. I had forgetten it. )
       
 0.09  Fri Feb 15 14:49:01 JST 2008
     - The function used by _fluash was changed from log_message into log.
