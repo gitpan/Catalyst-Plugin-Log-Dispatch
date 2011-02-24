@@ -1,5 +1,8 @@
 Revision history for Catalyst-Plugin-Log-Dispatch
 
+0.121 Thu Feb 24 21:50:43 JST 2011
+    - What was I thinking wrong PID erased.
+    
 0.12  Wed Oct  6 19:33:48 JST 2010
     - move Catalyst version check to setup method.
      ( Thank you for Matt S Trout )

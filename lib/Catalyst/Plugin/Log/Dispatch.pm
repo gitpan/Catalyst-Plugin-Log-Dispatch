@@ -3,7 +3,7 @@ package Catalyst::Plugin::Log::Dispatch;
 use warnings;
 use strict;
 
-our $VERSION = '0.12';
+our $VERSION = '0.121';
 
 #use base 'Catalyst::Base';
 use vars qw/$HasTimePiece $HasTimeHiRes/;
@@ -23,10 +23,10 @@ use IO::Handle;
 
 sub setup {
     if( $Catalyst::VERSION >= 5.8 ) {
-        MRO::Compat->use or die "can not use MRO::Compat : $!\n";
+        MRO::Compat->use or die "can not use MRO::Compat : $@\n";
     }
     else {
-        NEXT->use or die "can not use NEXT : $!\n";
+        NEXT->use or die "can not use NEXT : $@\n";
     }
     my $c = shift;
     my $old_log = undef;
@@ -117,7 +117,7 @@ sub __log_dispatch_get_body {
     my $log = shift;
     return $Catalyst::VERSION >= 5.8 ? $log->_body : $log->body;
 }
-
+use Data::Dumper;
 # copy and paste from Log::Dispatch::Config
 # please teach a cool method.
 sub _format_to_cb_o {
@@ -133,7 +133,7 @@ sub _format_to_cb_o {
             $p{m} = delete $p{message};
             $p{n} = "\n";
             $p{'%'} = '%';
-            
+            $p{i} = $$;
             if ($needs_caller) {
                 my $depth = 0; 
                 $depth++ while caller($depth) =~ /^Catalyst::Plugin::Log::Dispatch/;
@@ -141,12 +141,13 @@ sub _format_to_cb_o {
                 @p{qw(P F L)} = caller($depth);
             }
             
-            my ($t,$ms) = Time::HiRes::gettimeofday =~ /^(\d+)\.(\d+)$/;
+            my ($t,$ms) = Time::HiRes::gettimeofday();
+            $ms = sprintf('%06d', $ms);
             my $log = $format;
             $log =~ s{
                          (%d(?:{(.*?)})?)|   # $1: datetime $2: datetime fmt
                          (%MS)|              # $3: milli second
-                         (?:%([%pmFLPn]))    # $4: others
+                         (?:%([%pmFLPni]))   # $4: others
                  }{
                      if ($1 && $2) {
                          _strftime_o($2,$t);
@@ -171,7 +172,7 @@ sub _format_to_cb_o {
             $p{m} = delete $p{message};
             $p{n} = "\n";
             $p{'%'} = '%';
-            
+            $p{i} = $$;
             if ($needs_caller) {
                 my $depth = 0; 
                 $depth++ while caller($depth) =~ /^Catalyst::Plugin::Log::Dispatch/;
@@ -241,17 +242,22 @@ use Data::Dumper;
                      message => "@_");
             local $Log::Dispatch::Config::CallerDepth += 1;
             local $Catalyst::Plugin::Log::Dispatch::CallerDepth += 3;
-            foreach (keys %{ $self->{outputs} }) {
-                my %h = %p;
-                $h{name} = $_;
-                if( $self->{outputs}->{$_}->{rtf} ) {
-                    $self->{outputs}->{$_}->log(%h);
+            if( keys( %{ $self->{outputs} } ) ) {
+                foreach (keys %{ $self->{outputs} }) {
+                    my %h = %p;
+                    $h{name} = $_;
+                    if( $self->{outputs}->{$_}->{rtf} ) {
+                        $self->{outputs}->{$_}->log(%h);
+                    }
+                    else {
+                        $h{message} = $self->{outputs}->{$_}->_apply_callbacks(%h)
+                            if($self->{outputs}->{$_}->{callbacks});
+                        push(@{$self->_body}, \%h);
+                    }
                 }
-                else {
-                    $h{message} = $self->{outputs}->{$_}->_apply_callbacks(%h)
-                        if($self->{outputs}->{$_}->{callbacks});
-                    push(@{$self->_body}, \%h);
-                }
+            }
+            else {
+                push(@{$self->_body}, \%p);
             }
         };
     }
